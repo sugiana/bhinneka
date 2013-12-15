@@ -15,16 +15,12 @@ def get_key_values(c):
     for g in c.xpath('div/ul/li/i'):
         s = v(g.xpath('text()').extract())
         r.append(s)        
-    if r:
-        return r
     for g in c.xpath('div/ul/li'):
         s = v(g.xpath('text()').extract())
         r.append(s)
-    if r:
-        return r
     s = v(c.xpath('text()').extract())
     if s:
-        return [s]        
+        r.append(s)
     return r
     
 def memori(values):
