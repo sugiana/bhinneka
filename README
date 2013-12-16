@@ -3,4 +3,3 @@ akhirnya memudahkan pencarian produk seperti: "Dapatkan harga notebook maksimal
 Rp 5.000.000".
 
 Dibutuhkan scrapy untuk menjalankannya. Sudah teruji di Scrapy 0.20.2.
-Sesuaikan variabel bin pada run.py sebelum menjalankannya.

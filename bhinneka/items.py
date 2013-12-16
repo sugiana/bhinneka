@@ -5,11 +5,6 @@
 
 from scrapy.item import Item, Field
 
-class BhinnekaItem(Item):
-    # define the fields for your item here like:
-    judul = Field()
-    url = Field()
-
 
 class Notebook(Item):
     judul = Field()
