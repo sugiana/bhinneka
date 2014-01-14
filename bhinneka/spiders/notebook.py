@@ -9,7 +9,8 @@ from bhinneka.tools import v, clean
 
 
 def price(s):
-    return int(s.lstrip('Rp ').replace(',', ''))
+    value = int(s.lstrip('Rp ').replace(',', ''))
+    return s, value
     
 def get_key_values(c):
     r = []        
@@ -48,18 +49,24 @@ def memory(values, url):
                 return [s, amount]
     raise CloseSpider('%s: Unrecognize memory %s.' % (url, values))
 
+regex_monitor = [
+    '([\d]*\.[\d])&quot',
+    '([\d]*\.[\d])"',
+    '([\d]*)"',
+    '([\d]*)&quot ',
+    ]
+    
 def monitor(values, url):
-    regexs = ['([\d]*\.[\d])&quot', '([\d]*\.[\d])"', '([\d]*)"']
     for value in values:
         s = clean(value)
-        for regex in regexs:
+        for regex in regex_monitor:
             match = re.compile(regex).search(s)
             if match:
                 nominal = float(match.group(1))
                 return [s, nominal] # inch
     raise CloseSpider('%s: Unrecognize monitor size %s.' % (url, values))
     
-def resolution(values):
+def resolution(values, url):
     regexs = ['([\d]*) x ([\d]*)', '([\d]*)x([\d]*)']
     for value in values:
         s = clean(value)
@@ -87,7 +94,6 @@ def get_images(sel, url):
  
 BRANDS = ['acer', 'apple', 'asus', 'axioo', 'dell', 'fujitsu', 'hp', 'lenovo',
           'sony', 'toshiba', 'samsung']
-
 URLS = []
 for brand in BRANDS:
     url = 'http://www.bhinneka.com/category/notebook___laptop/brands/%s.aspx/' % brand
@@ -123,7 +129,7 @@ class NotebookSpider(CrawlSpider):
             cols = spec.xpath('td')
             key = v(cols[0].xpath('b/text()').extract())
             values = get_key_values(cols[1])
-            if key == 'Tipe Prosessor':
+            if key in ('Tipe Prosessor', 'Processor Onboard'):
                 i['processor'] = clean(' '.join(values))
             elif key == 'Memori Standar':
                 i['memory'] = memory(values, response.url)
