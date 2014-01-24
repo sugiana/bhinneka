@@ -6,15 +6,29 @@
 from scrapy.item import Item, Field
 
 
-class Notebook(Item):
+class Base(Item):
     url = Field()
     title = Field()
     description = Field()
     picture = Field()
     price = Field()
+
+class Computer(Base):
     processor = Field()
     memory = Field()
     storage = Field()
     graphic = Field()
+    operating_system = Field()
+    
+class Desktop(Computer):
     monitor = Field()
-    resolution = Field()
+    resolution = Field()    
+
+class Notebook(Desktop):
+    battery = Field()
+    
+class MobilePhone(Notebook):
+    pass
+
+
+
