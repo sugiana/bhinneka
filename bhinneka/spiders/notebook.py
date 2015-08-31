@@ -1,59 +1,49 @@
-from scrapy.selector import Selector
-from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
-from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy import (
+    Request,
+    FormRequest,
+    )
 from bhinneka.items import Notebook
 from .tools import (
-    v,
-    get_key_values,
-    get_images,
+    BASE_URL,
+    meta_from_response,
+    CommonSpider,
     )
     
  
-BRANDS = ['acer', 'apple', 'asus', 'axioo', 'dell', 'fujitsu', 'hp', 'lenovo',
-          'sony', 'toshiba', 'samsung']
-URLS = []
-for brand in BRANDS:
-    url = 'http://www.bhinneka.com/category/notebook___laptop/brands/%s.aspx/' % brand
-    URLS.append(url)
 
-
-class NotebookSpider(CrawlSpider):
+class NotebookSpider(CommonSpider):
     name = 'notebook'
-    allowed_domains = ['bhinneka.com']
-    start_urls = URLS
-    rules = (
-        Rule(SgmlLinkExtractor(
-                restrict_xpaths=['//div[@id="products"]/table//tr'],
-                allow=('\/products\/sku([\d]*)\/(.*)\.aspx$'),
-                ),
-              callback='parse_detail'),
+    specs = dict(
+        processor=['Tipe Prosessor', 'Processor Onboard'],
+        memory=['Memori Standar'],
+        storage=['Kapasitas Penyimpanan'],
+        graphic=['Tipe Grafis'],
+        monitor=['Ukuran Layar'],
+        resolution=['Resolusi Layar'],
+        battery=['Baterai'],
         )
+    brands = ['acer', 'apple', 'asus', 'axioo', 'dell', 'fujitsu', 'hp',
+              'lenovo', 'sony', 'toshiba', 'samsung']
+    brand_url_tpl = '{b}/category/notebook___laptop/brands/{n}.aspx'
+    product_class = Notebook
 
-    def parse_detail(self, response):
-        sel = Selector(response)
-        i = Notebook()
-        i['url'] = response.url
-        i['title'] = v(sel.xpath('//h1[@itemprop="name"]/text()').extract())
-        i['description'] = v(sel.xpath('//span[@id="ctl00_content_lblProductInformation"]/div/text()').extract())
-        i['picture'] = get_images(sel, response.url)
-        i['price'] = v(sel.xpath('//span[@itemprop="price"]/text()').extract())
-        specs = sel.xpath('//span[@id="ctl00_content_lblDetail"]/table/tr')
-        for spec in specs:
-            cols = spec.xpath('td')
-            key = v(cols[0].xpath('b/text()').extract())
-            values = get_key_values(cols[1])
-            if key in ('Tipe Prosessor', 'Processor Onboard'):
-                i['processor'] = values
-            elif key == 'Memori Standar':
-                i['memory'] = values
-            elif key == 'Kapasitas Penyimpanan':
-                i['storage'] = values
-            elif key == 'Tipe Grafis':
-                i['graphic'] = values
-            elif key == 'Ukuran Layar':
-                i['monitor'] = values
-            elif key == 'Resolusi Layar':
-                i['resolution'] = values
-            elif key == 'Baterai':
-                i['battery'] = values
-        yield i
+    def start_requests(self): # override from Spider class
+        for brand in self.brands:
+            url = self.brand_url_tpl.format(b=BASE_URL, n=brand)
+            meta = dict(brand=brand)
+            yield Request(url, self.parse, meta=meta)
+
+    def product_request(self, response, url): # override from CommonSpider class
+        meta = meta_from_response(response)
+        return FormRequest(url=url, callback=self.product_parser, meta=meta)
+
+    def product_instance(self, response):
+        i = self.product_class()
+        i['brand'] = response.meta['brand']
+        return i
+
+    def next_page_request(self, response, selector):
+        data = self.next_page_data(selector)
+        meta = meta_from_response(response)
+        return FormRequest(url=response.url, method='POST', formdata=data,
+                           callback=self.parse, meta=meta)

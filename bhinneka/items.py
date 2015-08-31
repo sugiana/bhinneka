@@ -3,7 +3,10 @@
 # See documentation in:
 # http://doc.scrapy.org/en/latest/topics/items.html
 
-from scrapy.item import Item, Field
+from scrapy.item import (
+    Item,
+    Field,
+    )
 
 
 class Base(Item):
@@ -12,6 +15,7 @@ class Base(Item):
     description = Field()
     picture = Field()
     price = Field()
+    brand = Field()
 
 class Computer(Base):
     processor = Field()
@@ -28,7 +32,4 @@ class Notebook(Desktop):
     battery = Field()
     
 class MobilePhone(Notebook):
-    pass
-
-
-
+    camera = Field()

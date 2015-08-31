@@ -7,9 +7,5 @@
 #
 
 BOT_NAME = 'bhinneka'
-
 SPIDER_MODULES = ['bhinneka.spiders']
 NEWSPIDER_MODULE = 'bhinneka.spiders'
-
-# Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'bhinneka (+http://www.yourdomain.com)'
