@@ -48,9 +48,12 @@ def v(values):
 def regex_compile(regexs):
     r = []
     for regex in regexs:
-        if type(regex) == ListType:
+        is_list = type(regex) == ListType
+        if is_list:
             regex = regex[0]
         c = re.compile(regex)
+        if is_list:
+            c = [c] + regex[1:]
         r.append(c)
     return r
     

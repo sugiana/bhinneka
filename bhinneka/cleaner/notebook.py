@@ -106,14 +106,22 @@ class NotebookCleaner(object):
             s = clean(value).lower()
             for rc in self.resolution_regexs_compiled:
                 match = c_regex_search(rc, s)
-                if match:
-                    width = match.group(1)
-                    height = match.group(2)
-                    try:
-                        return [value, int(width), int(height)]
-                    except ValueError, err:
-                        print(err)
-                        return
+                if not match:
+                    continue
+                count = len(match.groups())
+                if not count:
+                    return [value, None, None]
+                if count > 1:
+                    width = int(match.group(1))
+                    height = int(match.group(2))
+                else:
+                    height = int(match.group(1))
+                    width = None
+                try:
+                    return [value, width, height]
+                except ValueError, err:
+                    print(err)
+                    return
 
     def parse_monitor(self, values):
         for value in values:

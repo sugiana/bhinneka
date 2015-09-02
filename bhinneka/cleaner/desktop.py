@@ -33,9 +33,8 @@ MONITOR_REGEXS = [
     '(\d*)"', # 12"
     '(\d*\.\d)', # 20.0 
     '(\d*)', # 20.0
+    'include', # Include
     ]
-
-MONITOR_NOT_INCH = ['include']
 
 
 class DesktopCleaner(NotebookCleaner):
@@ -47,14 +46,15 @@ class DesktopCleaner(NotebookCleaner):
     def parse_monitor(self, values):
         for value in values:
             s = clean(value).lower()
-            if s in MONITOR_NOT_INCH:
-                return [value, None]
             for rc in self.monitor_regexs_compiled:
                 match = c_regex_search(rc, s)
-                if match:
-                    amount = match.group(1)
-                    if amount:
-                        return [value, float(amount)]
+                if not match:
+                    continue
+                if not match.groups():
+                    return [value, None]
+                amount = match.group(1)
+                if amount:
+                    return [value, float(amount)]
 
 
 if __name__ == '__main__':
