@@ -1,9 +1,10 @@
 from bhinneka.items import Desktop
-from .notebook import NotebookSpider
+from .tools import CommonSpider
 
  
-class DesktopSpider(NotebookSpider):
+class DesktopSpider(CommonSpider):
     name = 'desktop'
+    start_urls = ['http://www.bhinneka.com/category/komputer___pc___desktop.aspx']
     specs = dict(
         processor=['Tipe Prosessor', 'Processor Onboard'],
         memory=['Memori Standar'],
@@ -11,6 +12,4 @@ class DesktopSpider(NotebookSpider):
         graphic=['Tipe Grafis', 'VGA Card'],
         monitor=['Ukuran Layar', 'Monitor'],
         resolution=['Resolusi Layar'])
-    brands = ['acer', 'asus', 'dell', 'hp', 'lenovo']
-    brand_url_tpl = '{b}/category/komputer___pc___desktop/brands/{n}.aspx'
     product_class = Desktop

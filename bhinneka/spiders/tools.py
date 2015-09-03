@@ -123,6 +123,8 @@ class CommonSpider(Spider):
                              xpath('@content').extract())
         i['picture'] = get_images(sel, response.url)
         i['price'] = v(sel.xpath('//span[@itemprop="price"]/text()').extract())
+        i['brand'] = v(sel.xpath('//a[@id="ctl00_content_lnkBrand"]').\
+                        xpath('@title').extract())
         specs = sel.xpath('//table[@class="spesifications"]/tr')
         for spec in specs:
             cols = spec.xpath('td')

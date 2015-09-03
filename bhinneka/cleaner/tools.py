@@ -108,5 +108,31 @@ def unknown_values(key, values):
 
 def key_not_found(key, url):
     print('TIDAK ADA {k} di {u}'.format(k=key, u=url))
+    
+##########    
+# Parser #
+##########
+def parse(keys, data, func):
+    found = False
+    first_key = keys[0]
+    values = []
+    for key in keys:
+        if key not in data:
+            continue
+        value = data[key]
+        found = True        
+        if type(value) != ListType:
+            value = [value]
+        values += value
+    if not found:
+        for key in keys:
+            key_not_found(key, data['url'])
+        return
+    val = func(values)
+    if val is None:
+        print('*** DEBUG parse_ {d}'.format(d=data))
+        unknown_values(first_key, values)
+    return val
+    
 
 

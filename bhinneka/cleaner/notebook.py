@@ -9,6 +9,7 @@ from tools import (
     price,
     key_not_found,
     unknown_values,
+    parse,
     )
 
 
@@ -54,31 +55,32 @@ class NotebookCleaner(object):
         self.monitor_regexs_compiled = regex_compile(self.monitor_regexs)
 
     def parse(self, data):
-        def parse_(key, func):
-            if key in data:
-                values = data[key]
-                if not values:
-                    return
-                val = func(values)
-                if not val:
-                    print(data)
-                    unknown_values(key, values)
-                r[key] = val
-            else:
-                key_not_found(key, data['url'])
-
+        def parse_(keys, func):
+            vals = parse(keys, data, func)
+            if vals is None or vals is False:
+                return
+            first_key = keys[0]
+            r[first_key] = vals
+                
         r = copy_text(data)
-        parse_('price', self.parse_price)
-        parse_('memory', self.parse_memory)
-        parse_('storage', self.parse_storage)
-        parse_('resolution', self.parse_resolution)
-        parse_('monitor', self.parse_monitor)
+        parse_(['stock', 'price'], self.parse_stock)
+        parse_(['price'], self.parse_price)
+        parse_(['memory'], self.parse_memory)
+        parse_(['storage'], self.parse_storage)
+        parse_(['resolution'], self.parse_resolution)
+        parse_(['monitor', 'description'], self.parse_monitor)
         return r
+        
+    def parse_stock(self, values):
+        for value in values:
+            if value:
+                return False
+            return 0
 
     def parse_price(self, values):
-        if type(values) != ListType:
-            values = [values]
         for value in values:
+            if not value:
+                return False
             s = clean(value)
             vals = price(value)
             if vals:

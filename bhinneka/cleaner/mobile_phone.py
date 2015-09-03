@@ -5,18 +5,10 @@ from tools import (
     c_regex_search,
     regex_compile,
     clean,
-    key_not_found,
-    unknown_values,
+    parse,
     )
 from notebook import NotebookCleaner
 
-
-BRANDS = ['acer', 'advan', 'alcatel', 'aldo', 'apple', 'asus', 'axioo',
-          'blackberry', 'blaupunkt', 'bolt', 'cross', 'evercoss', 'himax',
-          'hp', 'htc', 'huawei', 'infocus', 'kata', 'k-touch', 'lenovo', 'lg',
-          'mito', 'motorola', 'nokia', 'oppo', 'pixcom', 'polytron', 'samsung',
-          'sharp', 'smartfren', 'sony', 'treq', 'wiko', 'v-gen', 'xiaomi',
-          'zte']
 
 U2 = (REGEX_UNITS, REGEX_UNITS)
 
@@ -41,6 +33,8 @@ MEMORY_REGEXS = [
     '(\d*)%s ram' % REGEX_UNITS,
     # 4 GB storage, 1GB
     'storage, (\d*)%s' % REGEX_UNITS,
+    # RAM 256MB, ROM 512MB
+    'ram (\d*)%s' % REGEX_UNITS,    
     # 16 GB (8 GB user-available)
     '16 gb \(8 gb user-available\)',
     ####################
@@ -217,35 +211,17 @@ class MobilePhoneCleaner(NotebookCleaner):
         
     def parse(self, data):
         def parse_(keys, func):
-            found = False
-            first_key = keys[0]
-            values = []
-            for key in keys:
-                if key not in data:
-                    continue
-                value = data[key]
-                if not value:
-                    continue
-                found = True
-                if type(value) != ListType:
-                    value = [value]
-                values += value
-            if not found:
-                for key in keys:
-                    key_not_found(key, data['url'])
+            vals = parse(keys, data, func)
+            if vals is None or vals is False:
                 return
-            val = func(values)
-            if val:
-                r[first_key] = val
-            else:
-                print('*** DEBUG parse_ {d}'.format(d=data))
-                unknown_values(first_key, values)
+            first_key = keys[0]
+            r[first_key] = vals
 
         if self.spesific_url and self.spesific_url != data['url']:
             return dict()
         r = copy_text(data)
-        parse_(['brand', 'title'], self.parse_brand)
         parse_(['price'], self.parse_price)
+        parse_(['stock', 'price'], self.parse_stock)        
         parse_(['memory', 'description'], self.parse_memory)
         parse_(['storage', 'memory', 'description'], self.parse_storage)
         parse_(['resolution'], self.parse_resolution)
@@ -254,13 +230,6 @@ class MobilePhoneCleaner(NotebookCleaner):
         parse_(['camera', 'description'], self.parse_camera)
         parse_(['front_camera', 'camera'], self.parse_front_camera)
         return r
-
-    def parse_brand(self, values):
-        for value in values:
-            s = clean(value).lower()
-            t = s.split()
-            if t and t[0] in BRANDS:
-                return t[0]
 
     def parse_memory(self, values):
         for value in values:
