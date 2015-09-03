@@ -18,6 +18,8 @@ def just_ascii(s):
 def clean_char(ch):
     if ch == u'\u201d':
         return '"'
+    if ch == u'\xd7':
+        return 'x'
     return ch in string.printable and ch or ' '
 
 def one_space(s):
@@ -70,6 +72,9 @@ def regex_search(regex, text):
 def price(s):
     val = s.lower().replace('rp', 'idr').replace(',', '')
     if val:
+        t = val.split()
+        if len(t) != 2:
+            return
         currency, amount = val.split()
         return [int(amount), currency]
 
@@ -98,8 +103,8 @@ def copy_text(data):
 def unknown_values(key, values):
     print('GAGAL menerjemahkan nilai dalam {k}:'.format(k=key))
     for value in values:
-        print([value])
-    raise Exception('Tidak ditemukan pola yang cocok.')
+        print('  {v}'.format(v=[value]))
+    #raise Exception('Tidak ditemukan pola yang cocok.')
 
 def key_not_found(key, url):
     print('TIDAK ADA {k} di {u}'.format(k=key, u=url))

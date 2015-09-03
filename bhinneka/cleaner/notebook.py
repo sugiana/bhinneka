@@ -1,4 +1,5 @@
 import json
+from types import ListType
 from tools import (
     REGEX_UNITS,
     copy_text,
@@ -74,12 +75,15 @@ class NotebookCleaner(object):
         parse_('monitor', self.parse_monitor)
         return r
 
-    def parse_price(self, value):
-        s = clean(value)
-        vals = price(value)
-        if vals:
-            amount, currency = vals
-            return [value, amount, currency]
+    def parse_price(self, values):
+        if type(values) != ListType:
+            values = [values]
+        for value in values:
+            s = clean(value)
+            vals = price(value)
+            if vals:
+                amount, currency = vals
+                return [value, amount, currency]
 
     def parse_memory(self, values):
         for value in values:
