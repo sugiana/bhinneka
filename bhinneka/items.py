@@ -16,6 +16,7 @@ class Base(Item):
     picture = Field()
     price = Field()
     brand = Field()
+    model = Field()
 
 class Computer(Base):
     processor = Field()
@@ -33,3 +34,4 @@ class Notebook(Desktop):
     
 class MobilePhone(Notebook):
     camera = Field()
+    front_camera = Field()
