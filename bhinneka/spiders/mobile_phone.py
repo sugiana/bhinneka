@@ -52,9 +52,10 @@ def parse_unit_from_other_(values, regexs):
             amount = match.group(1)
             if not amount:
                 continue
+            amount = should_int(float(amount))
             unit = match.group(2)
             value = regex_get_original_words(rc.pattern, s, value)
-            return [value, int(amount), unit]
+            return [value, amount, unit]
        
 def parse_memory_from_description(values):
     return parse_unit_from_other_(values, MEMORY_REGEXS)       
@@ -88,6 +89,10 @@ STORAGE_REGEXS_FROM_DESCRIPTION = regex_compile([
     '(\d*) %s storage' % REGEX_UNITS,
     # 8GB Storage
     '(\d*)%s storage' % REGEX_UNITS,
+    # 1.9GB Internal, 512MB RAM    
+    '(\d*\.\d)%s internal' % REGEX_UNITS,    
+    # 4GB Internal,512MB RAM
+    '(\d*)%s internal' % REGEX_UNITS,    
     # ROM 4 GB    
     'rom (\d*) %s' % REGEX_UNITS,
     # 8 GB Internal
@@ -290,6 +295,8 @@ FRONT_CAMERA_REGEXS = regex_compile([
     'sekunder : (\d*)mp',
     # Front Camera : 5.0 MP 
     'front camera : (\d*\.\d) mp',
+    # Front Camera : 1.3MP    
+    'front camera : (\d*\.\d)mp',
     # Front: 2MP
     'front: (\d*)mp',
     # Depan : 5.0 MP
@@ -362,7 +369,8 @@ class MobilePhoneSpider(CommonSpider):
     def parse_operating_system(self, response, i):
         return self.parse_text_(response, i, 'operating_system')
                 
-    def parse_multi_source_(self, response, i, key, sources, func):
+    def parse_multi_source_(self, response, i, key, sources, func,
+            need_warning=True):
         s = []
         for source in sources:
             if source in i:
@@ -378,21 +386,22 @@ class MobilePhoneSpider(CommonSpider):
         else:
             if key in i:
                 del i[key]
-            self.logger.warning('{url} {k} {v} tidak dipahami.'.format(
-                url=response.url, k=key, v=s))
+            if need_warning:
+                self.logger.warning('{url} {v} {k} tidak dipahami.'.format(
+                    url=response.url, k=key, v=s))
         return i
                         
     def parse_memory(self, response, i):
-        i = self.parse_multi_source_(response, i, 'memory',
-                    ['memory'], parse_memory)
+        i = self.parse_multi_source_(response, i, 'memory', ['memory'],
+                parse_memory, False)
         if 'memory' not in i:
             i = self.parse_multi_source_(response, i, 'memory',
                     ['description'], parse_memory_from_description)
         return i
         
     def parse_storage(self, response, i):
-        i = self.parse_multi_source_(response, i, 'storage',
-                    ['memory'], parse_storage)
+        i = self.parse_multi_source_(response, i, 'storage', ['memory'],
+                parse_storage, False)
         if 'storage' not in i:
             i = self.parse_multi_source_(response, i, 'storage',
                     ['description'], parse_storage_from_description)
@@ -408,11 +417,10 @@ class MobilePhoneSpider(CommonSpider):
         
     def parse_battery(self, response, i):
         i = self.parse_multi_source_(response, i, 'battery',
-                ['battery'], parse_battery)
-        if 'battery' in i:
-            return i
-        i = self.parse_multi_source_(response, i, 'battery',
-                ['description'], parse_battery_from_description)
+                ['battery'], parse_battery, False)
+        if 'battery' not in i:
+            i = self.parse_multi_source_(response, i, 'battery',
+                    ['description'], parse_battery_from_description)
         return i
         
     def parse_camera(self, response, i):
@@ -431,14 +439,14 @@ class MobilePhoneSpider(CommonSpider):
             vals += [i['description']]
         if 'camera' in i:
             del i['camera']
-            self.logger.warning('{url} camera {v} tidak dipahami.'.format(
+            self.logger.warning('{url} {v} camera tidak dipahami.'.format(
                 url=response.url, v=vals))
         return i
         
     def parse_front_camera(self, response, i):
         i = self.parse_multi_source_(response, i, 'front_camera',
-                ['camera'], parse_front_camera)
-        if 'front_camera' in i:
-            return i
-        return self.parse_multi_source_(response, i, 'front_camera',
+                ['camera'], parse_front_camera, False)
+        if 'front_camera' not in i:
+            i = self.parse_multi_source_(response, i, 'front_camera',
                 ['description'], parse_front_camera_from_description)
+        return i
