@@ -8,6 +8,10 @@ Dibutuhkan scrapy untuk menjalankannya. Sudah teruji di Scrapy 1.0.3.
 
 Pemasangan
 ----------
+Siapkan pustaka yang dibutuhkan::
+
+  sudo apt-get install libxml2-dev libxslt1-dev python-dev libffi-dev
+
 Buatlah Python virtual environment::
 
   virtualenv env
