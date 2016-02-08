@@ -105,9 +105,9 @@ def parse_storage_from_description(values):
     return parse_unit_from_other_(values, STORAGE_REGEXS_FROM_DESCRIPTION)
     
 MONITOR_REGEXS = regex_compile([
-    '(\d*\.\d) inch', # 5.0 inch
-    '(\d*\.\d)inch', # 5.0 inches
-    '(\d*) inch', # 5 inch
+    '(\d*\.\d*) inch', # 5.0 inch
+    '(\d*) inch', # 5 inch    
+    '(\d*\.\d)inch', # 5.0inches
     '(\d*\.\d)-inch', # 4.0-inch
     '^(\d\.\d)$', # 4.5
     ])
