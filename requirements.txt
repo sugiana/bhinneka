@@ -1,2 +1,5 @@
+pyparsing
+appdirs
+paramiko
 scrapy>=1.0.0
 beautifulsoup4

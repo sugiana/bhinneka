@@ -14,11 +14,6 @@ from bs4 import BeautifulSoup
 
 
 BASE_URL = 'http://www.bhinneka.com'
-XPATH_NEXT_PAGE = '//a[@id="ctl00_content_listViewItemPagerBottom_'\
-                  'pagerNext_lbNext"]'
-EVENTTARGET = 'ctl00$content$listViewItemsPager$pagerNext$lbNext'
-EVENTTARGET_PAGE_TPL = 'ctl00$content$listViewItemsPager$pager{page}'\
-                       '$lbNumericPager'
 
 
 def v(values):
@@ -170,52 +165,17 @@ class CommonSpider(Spider):
             yield self.parse_product(response)
             return    
         xs = Selector(response)
-        if self.start_page and 'start_page' not in response.meta:
-            yield self.goto_page_request(response, xs)
-        else:
-            for url in xs.xpath('//a[@class="prod-itm-link"]').re('href="(.*)"'):
-                url_ = BASE_URL + url
-                yield self.product_request(response, url_)
-            if xs.xpath(XPATH_NEXT_PAGE).extract():
-                yield self.next_page_request(response, xs) 
-
-    def next_page_data(self, selector):
-        data = self._form_data(selector)
-        data['__EVENTTARGET'] = EVENTTARGET
-        return data
-
-    def goto_page_data(self, selector):
-        data = self._form_data(selector)
-        data['__EVENTTARGET'] = EVENTTARGET_PAGE_TPL.format(
-                                    page=self.start_page)
-        return data
-
-    def _form_data(self, selector):
-        data = dict() 
-        for sel_input in selector.xpath('//input[@type="hidden"]'):
-            n = sel_input.xpath('@name').extract()
-            if not n:
-                continue
-            n = n[0]
-            if n in data:
-                continue
-            v = sel_input.xpath('@value').extract()
-            if not v:
-                continue
-            v = v[0]
-            data[n] = v
-        return data
-
-    def next_page_request(self, response, selector):
-        data = self.next_page_data(selector)
-        return FormRequest(url=response.url, method='POST', formdata=data,
-                          callback=self.parse)
-
-    def goto_page_request(self, response, selector):
-        data = self.goto_page_data(selector)
-        meta = dict(start_page=self.start_page)
-        return FormRequest(url=response.url, method='POST', formdata=data,
-                           callback=self.parse, meta=meta)
+        for url in xs.xpath('//a[@class="prod-itm-link"]').re('href="(.*)"'):
+            url_ = BASE_URL + url
+            yield self.product_request(response, url_)
+        xs_next = xs.xpath('//div[@id="divItemsPager"]')
+        if not xs_next:
+            return
+        selector = Selector(text=xs_next.extract()[0])
+        urls = selector.xpath('//a[@rel="Next"]').xpath('@href').extract()
+        if urls:
+            url = BASE_URL + urls[0]
+            yield Request(url=url)
 
     def product_request(self, response, url):
         return FormRequest(url=url, callback=self.parse_product_)
