@@ -115,7 +115,7 @@ def parse_url(sel):
     return v(s)
     
 def parse_title(sel):    
-    s = sel.xpath('//h1[@itemprop="name"]/text()').extract()
+    s = sel.xpath('//meta[@property="og:title"]').xpath('@content').extract()
     return v(s)
     
 def parse_description(sel):    
