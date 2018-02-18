@@ -124,16 +124,25 @@ def parse_description(sel):
     s = s.replace('\r\n', ' ')
     return clean(s)
     
+PRICE_TPL = '//div[@id="ctl00_content_divPrice"]/span[@itemprop="{i}"]'
+
+def parse_price_(sel, itemprop):
+    s = PRICE_TPL.format(i=itemprop)
+    s = sel.xpath(s).xpath('@content').extract()
+    return v(s)
+
 def parse_price(sel):
-    s = v(sel.xpath('//span[@itemprop="price"]/text()').extract())
-    val = s.lower().replace('rp', 'idr').replace(',', '')
-    if not val:
+    amount = parse_price_(sel, 'price')
+    if not amount:
         return
-    t = val.split()
-    if len(t) != 2:
-        return
-    currency, amount = val.split()
-    return [s, int(amount), currency]
+    currency = parse_price_(sel, 'priceCurrency')
+    if not currency:
+        s = sel.extract()
+        p = s.find('"Currency": "')
+        if p > -1:
+            currency = s[p+13:p+16] 
+    s = ' '.join([currency, amount])
+    return [s, int(amount), currency.lower()]
     
 def parse_brand(sel):    
     s = sel.xpath('//a[@id="ctl00_content_lnkBrand"]').xpath('@title').extract()
